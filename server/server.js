@@ -1,14 +1,20 @@
 import express from "express";
 import multer from 'multer';
+import cors from 'cors';
 import { createClient } from "@supabase/supabase-js";
 import 'dotenv/config';
 
 const app = express();
+app.use(cors());
+app.use(express.json());
+
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_KEY
 );
+
 
 const IMAGE_BUCKET = 'item-images';
 const upload = multer({
@@ -398,4 +404,4 @@ app.use((req, res) => {
   res.status(404).json({error: "404: Not found"});
 });
 
-app.listen(3000);
+app.listen(5000);
