@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "start": "node server.js",
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
@@ -11,11 +12,13 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
+    "cors": "^2.8.6",
     "dotenv": "^18.0.4",
     "express": "^5.1.0",
     "multer": "^2.4.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
