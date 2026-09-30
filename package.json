@@ -4,11 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "vite client",
+    "api": "node ./server/server.js",
+    "build": "vite build client",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview client"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
@@ -21,10 +21,12 @@
     "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
     "oxlint": "^1.81.0",
+    "tailwindcss": "^4.3.3",
     "vite": "^8.3.0"
   }
 }
