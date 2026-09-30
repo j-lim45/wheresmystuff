@@ -15,11 +15,11 @@ async function request(path, options = {}) {
   return res.json();
 }
 
-async function uploadImage(file) {
+async function uploadImage(file, kind='item') {
   const formData = new FormData();
   formData.append('image', file);
 
-  const res = await fetch(`${BASE_URL}/uploads`, {
+  const res = await fetch(`${BASE_URL}/uploads?kind=${kind}`, {
     method: 'POST',
     body: formData,
   });
