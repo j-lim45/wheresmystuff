@@ -21,7 +21,8 @@ export default function ItemCard({ item }) {
         <p className="mt-2 flex items-center gap-1.5 text-xs italic text-muted"><Icon name="box" size={14}/><span className="truncate">{item.container_name || 'Unassigned'}</span></p>
       </div>
     </Link>
-    <button aria-label={`${item.is_favorited ? 'Unfavorite' : 'Favorite'} ${item.name}`} aria-pressed={Boolean(item.is_favorited)} disabled={busy} onClick={toggle} className={`absolute right-5 top-5 flex size-9 items-center justify-center rounded-full border border-white/10 bg-ink/80 backdrop-blur-sm hover:scale-110 ${item.is_favorited ? 'text-[#f0b66d]' : 'text-stone-200'}`}><Icon name="heart" size={18} fill={item.is_favorited ? 'currentColor' : 'none'} /></button>
+    <button aria-label={`${item.is_favorited ? 'Unfavorite' : 'Favorite'} ${item.name}`} aria-pressed={Boolean(item.is_favorited)} disabled={busy} onClick={toggle} className={`absolute right-5 top-5 flex size-9 items-center justify-center rounded-full border border-white/10 bg-ink/80 backdrop-blur-sm hover:scale-110 ${item.is_favorited ? 'text-red-500' : 'text-stone-200'}`}><Icon name="heart" size={18} fill={item.is_favorited ? 'currentColor' : 'none'} />
+    </button>
     {error && <p role="alert" className="px-4 pb-3 text-xs text-red-300">{error}</p>}
   </article>;
 }
