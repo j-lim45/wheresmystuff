@@ -1,13 +1,10 @@
-import { createRequire } from 'node:module';
+import express from 'express';
+import multer from 'multer';
+import cors from 'cors';
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-// This repository keeps its shared Node dependencies in client/package.json.
-const require = createRequire(new URL('../client/package.json', import.meta.url));
-const express = require('express');
-const multer = require('multer');
-const cors = require('cors');
-const { createClient } = require('@supabase/supabase-js');
-const dotenv = require('dotenv');
 dotenv.config({ path: fileURLToPath(new URL('../.env', import.meta.url)), quiet: true });
 
 const imageTypes = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
@@ -33,6 +30,27 @@ export function createApp(supabase) {
 const app = express();
 app.use(cors({origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173'}));
 app.use(express.json());
+
+const username = process.env.BASIC_AUTH_USERNAME;
+const password = process.env.BASIC_AUTH_PASSWORD;
+app.use((req, res, next) => {
+  const auth = req.headers.authorization;
+
+  if (!auth?.startsWith("Basic ")) {
+    res.set("WWW-Authenticate", 'Basic realm="WheresMyStuff"');
+    return res.status(401).send("Authentication required");
+  }
+
+  const [user, pass] = Buffer.from(auth.slice(6), "base64")
+    .toString()
+    .split(":");
+
+  if (user === username && pass === password) return next();
+
+  res.set("WWW-Authenticate", 'Basic realm="WheresMyStuff"');
+  res.status(401).send("Authentication required");
+});
+
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
@@ -68,7 +86,7 @@ app.post('/api/uploads', upload.single('image'), async (req, res) => {
       upsert: false,
     });
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(500).json({ error: 'Something went wrong' });
 
   const { data } = supabase.storage.from(IMAGE_BUCKET).getPublicUrl(filePath);
 
@@ -86,7 +104,7 @@ app.get('/api/containers', async (req, res) => {
 
   if (error) {
     return res.status(500).json({
-      error: error.message
+      error: 'Something went wrong'
     });
   }
 
@@ -100,7 +118,7 @@ app.get('/api/containers', async (req, res) => {
 
   if (itemsError) {
     return res.status(500).json({
-      error: itemsError.message
+      error: 'Something went wrong'
     });
   }
 
@@ -157,7 +175,7 @@ app.get('/api/containers/:id', async (req, res) => {
   const itemsError = itemsResult.error;
 
   if (itemsError) {
-    return res.status(500).json({error: itemsError.message});
+    return res.status(500).json({error: 'Something went wrong'});
   }
 
   res.json({
@@ -189,7 +207,7 @@ app.post('/api/containers', async (req, res) => {
   const error = result.error;
 
   if (error) {
-    return res.status(500).json({error: error.message});
+    return res.status(500).json({error: 'Something went wrong'});
   }
 
   res.status(201).json(data);
@@ -211,7 +229,7 @@ app.put('/api/containers/:id', async (req, res) => {
     .select()
     .single();
  
-  if (error) return res.status(500).json({error: error.message});
+  if (error) return res.status(500).json({error: 'Something went wrong'});
   if (!data) return res.status(404).json({error: 'Container not found'});
   res.json(data);
 });
@@ -223,14 +241,14 @@ app.delete('/api/containers/:id', async (req, res) => {
     .from('items')
     .select('id', {count: 'exact', head: true})
     .eq('container_id', id);
-  if (countError) return res.status(500).json({error: countError.message});
+  if (countError) return res.status(500).json({error: 'Something went wrong'});
   if (count > 0) {
     return res.status(409).json({error: 'Move or delete the items inside this container before deleting it.'});
   }
 
   const result = await supabase.from('containers').delete().eq('id', id).select('id');
  
-  if (result.error) return res.status(500).json({error: result.error.message});
+  if (result.error) return res.status(500).json({error: 'Something went wrong'});
   if (!result.data.length) return res.status(404).json({error: 'Container not found'});
   res.status(204).send();
 });
@@ -244,7 +262,7 @@ app.get('/api/items', async (req, res) => {
  
   const { data, error } = await query.order('created_at', { ascending: true });
  
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(500).json({ error: 'Something went wrong' });
  
   const shaped = data.map(({ containers, ...item }) => ({
     ...item,
@@ -305,7 +323,7 @@ app.post('/api/items', async (req,res) => {
   const data = result.data;
   const error = result.error;
 
-  if (error) return res.status(500).json({error: error.message});
+  if (error) return res.status(500).json({error: 'Something went wrong'});
 
   res.status(201).json(data);
 });
@@ -339,7 +357,7 @@ app.put('/api/items/:id', async (req, res) => {
   const data = result.data;
   const error = result.error;
 
-  if (error) return res.status(500).json({error: error.message});
+  if (error) return res.status(500).json({error: 'Something went wrong'});
   if (!data) return res.status(404).json({error: 'Item not found'});
 
   res.json(data);
@@ -362,7 +380,7 @@ app.patch( '/api/items/:id/favorite', async(req,res) => {
   const data = result.data;
   const error = result.error;
 
-  if (error) return res.status(500).json({error: error.message});
+  if (error) return res.status(500).json({error: 'Something went wrong'});
   if (!data) return res.status(404).json({error: 'Item not found'});
 
   res.json(data);
@@ -379,7 +397,7 @@ app.delete( '/api/items/:id', async (req, res) => {
 
   const error = result.error;
 
-  if (error) return res.status(500).json({error: error.message});
+  if (error) return res.status(500).json({error: 'Something went wrong'});
 
   if (!result.data.length) return res.status(404).json({error: 'Item not found'});
   res.status(204).send();
@@ -389,10 +407,9 @@ app.use('/api', (req, res) => res.status(404).json({error: 'Not found'}));
 
 
 
-app.get("/", (req, res) => {
-  console.log("HELLO")
-  res.send("Hello from Express!");
-}); 
+const clientDist = fileURLToPath(new URL('../client/dist/', import.meta.url));
+app.use(express.static(clientDist));
+app.get('/{*path}', (req, res) => res.sendFile(`${clientDist}/index.html`));
 
 app.use((req, res) => {
   res.status(404).json({error: "404: Not found"});
@@ -400,8 +417,8 @@ app.use((req, res) => {
 
   app.use((error, req, res, next) => {
     if (res.headersSent) return next(error);
-    const status = error instanceof multer.MulterError || error.type === 'entity.parse.failed' ? 400 : error.status || 500;
-    res.status(status).json({ error: error.code === 'LIMIT_FILE_SIZE' ? 'Your image must be 5 MB or smaller' : error.message || 'Something went wrong' });
+    const status = error instanceof multer.MulterError || error.type === 'entity.parse.failed' ? 400 : error.status === 413 ? 413 : 500;
+    res.status(status).json({ error: error.code === 'LIMIT_FILE_SIZE' ? 'Your image must be 5 MB or smaller' : status === 400 ? 'Invalid request' : status === 413 ? 'Request too large' : 'Something went wrong' });
   });
   return app;
 }

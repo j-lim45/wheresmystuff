@@ -25,12 +25,30 @@ Check external resources on how to install the dependencies.
 ```bash
 SUPABASE_URL=your_supabase_url
 SUPABASE_KEY=your_supabase_anon_key
+BASIC_AUTH_USERNAME=your_chosen_username
+BASIC_AUTH_PASSWORD=your_chosen_password
 ```
 
 5. Run the API with `npm run api`
 6. Create/Split a new terminal then run the app with `npm run dev`
 7. Open the app in the browser using the link `http://localhost:5173/`
 
+Build with `npm run build` and start with `npm start`. Express serves both the
+frontend and API on `PORT` (default `5000`), behind HTTP Basic Authentication.
+Deploy this Node app on an HTTPS host; do not deploy the frontend separately as
+a public static site. Leave `VITE_API_URL` unset so requests use the same origin.
+
+Set `SUPABASE_URL`, `SUPABASE_KEY`, `BASIC_AUTH_USERNAME`, and
+`BASIC_AUTH_PASSWORD` in your hosting provider's environment settings. Missing
+login credentials prevent the server from starting. Usernames cannot contain
+a colon. The browser asks for credentials when you open the hosted app.
+See [MDN's HTTP authentication guide](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication).
+
+Keep the actual login credentials in your private workspace `project/README.md`
+and share that file privately with the grader. The `project/` directory and local
+`.env` files are ignored by Git. Never add real credentials to this README or
+force-add ignored files. Vite's development server is for local use only; use
+the Express server for the protected deployment.
 
 ## 3. Features and Usage
 
