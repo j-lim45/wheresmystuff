@@ -1,5 +1,7 @@
 # WheresMyStuff
 
+[![Made with AI](https://img.shields.io/badge/Made_with-AI_assistance-blue)](AI-USAGE.md)
+
 ## 1. Overview
 
 WheresMyStuff is a tracker app that lets users keep track of where they put their things inside different storage containers. It is designed for organized people who store many items across different containers and want an easy way to find them.
