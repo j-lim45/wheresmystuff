@@ -27,8 +27,8 @@ export function InventoryProvider({ children }) {
     }
   }, []);
 
-  useEffect(() => { 
-    void Promise.resolve().then(refresh); 
+  useEffect(() => {
+    refresh();
   }, [refresh]);
 
   useEffect(() => {
