@@ -92,6 +92,7 @@ export default function EntryForm({ kind }) {
       </fieldset>
       {uploading && <p role="status" className="text-sm text-[#e8ad65]">Uploading photo. Please wait…</p>}
       {confirmDelete ? <div key="delete-confirmation" className="rounded-xl border border-red-400/30 bg-red-950/20 p-4"><p className="text-sm">Delete this {kind}? This cannot be undone.{isContainer && ' The container must be empty first.'}</p><div className="mt-3 flex gap-2"><button type="button" className="btn border-red-400/40 text-red-200" disabled={busy} onClick={remove}>{busy ? 'Deleting…' : 'Yes, delete'}</button><button type="button" className="btn" disabled={busy} onClick={event => { event.preventDefault(); setConfirmDelete(false); }}>Keep it</button></div></div> : <div key="form-actions" className="flex items-center justify-between gap-3 border-t border-white/10 pt-5">
+        {editing && <button type="button" className="btn border-red-400/40 text-red-200" disabled={busy || uploading} onClick={() => setConfirmDelete(true)}><Icon name="trash" size={18}/>Delete</button>}
         <div className="flex gap-2"><button type="button" className="btn" disabled={busy || uploading} onClick={close}>Cancel</button><button type="submit" className="btn btn-primary" disabled={busy || uploading || !loaded}><Icon name="check" size={18}/>{busy ? 'Saving…' : editing ? 'Save changes' : `Create ${kind}`}</button></div>
       </div>}
     </form>}
