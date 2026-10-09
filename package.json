@@ -9,6 +9,8 @@
     "api": "node ./server/server.js",
     "build": "vite build client",
     "lint": "oxlint",
+    "test": "node --test",
+    "check": "npm run lint && npm test && npm run build",
     "preview": "vite preview client"
   },
   "dependencies": {

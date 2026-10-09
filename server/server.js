@@ -3,6 +3,7 @@ import multer from 'multer';
 import cors from 'cors';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import { timingSafeEqual } from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 dotenv.config({ path: fileURLToPath(new URL('../.env', import.meta.url)), quiet: true });
@@ -22,17 +23,33 @@ export function validateEntry(body, kind) {
     } catch { return 'Image URL is invalid'; }
   }
   if (body.is_favorited !== undefined && typeof body.is_favorited !== 'boolean') return 'Favorite must be true or false';
+  if (kind === 'Item' && body.container_id != null && body.container_id !== '' && !isUuid(body.container_id)) return 'Container must be a valid ID';
   return null;
+}
+
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function isUuid(value) {
+  return typeof value === 'string' && uuidPattern.test(value);
+}
+
+function sameText(left, right) {
+  const leftBuffer = Buffer.from(left || '');
+  const rightBuffer = Buffer.from(right || '');
+  return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
 }
 
 // Keep the original explicit routes; this wrapper allows tests to supply a mock database.
 export function createApp(supabase) {
+if (!supabase) throw new Error('A Supabase client is required.');
 const app = express();
 app.use(cors({origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173'}));
 app.use(express.json());
 
 const username = process.env.BASIC_AUTH_USERNAME;
 const password = process.env.BASIC_AUTH_PASSWORD;
+if (!username || !password || username.includes(':')) {
+  throw new Error('Set BASIC_AUTH_USERNAME and BASIC_AUTH_PASSWORD; the username cannot contain a colon.');
+}
 app.use((req, res, next) => {
   const auth = req.headers.authorization;
 
@@ -41,18 +58,28 @@ app.use((req, res, next) => {
     return res.status(401).send("Authentication required");
   }
 
-  const [user, pass] = Buffer.from(auth.slice(6), "base64")
-    .toString()
-    .split(":");
+  const decoded = Buffer.from(auth.slice(6), 'base64').toString();
+  const separator = decoded.indexOf(':');
+  const user = separator < 0 ? '' : decoded.slice(0, separator);
+  const pass = separator < 0 ? '' : decoded.slice(separator + 1);
 
-  if (user === username && pass === password) return next();
+  if (sameText(user, username) && sameText(pass, password)) return next();
 
   res.set("WWW-Authenticate", 'Basic realm="WheresMyStuff"');
   res.status(401).send("Authentication required");
 });
 
 
-app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/api/health', async (req, res) => {
+  const { error } = await supabase.from('containers').select('id').limit(1);
+  if (error) return res.status(503).json({ status: 'error', error: 'Database unavailable' });
+  res.json({ status: 'ok', database: 'connected' });
+});
+
+app.param('id', (req, res, next, id) => {
+  if (!isUuid(id)) return res.status(400).json({ error: 'Invalid ID' });
+  next();
+});
 
 const IMAGE_BUCKET = 'item-images';
 const upload = multer({
@@ -156,14 +183,13 @@ app.get('/api/containers/:id', async (req, res) => {
     .from('containers')
     .select('*')
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
   const container = containerResult.data;
   const error = containerResult.error;
 
-  if (error) {
-    return res.status(404).json({error: 'Container not found'});
-  }
+  if (error) return res.status(500).json({error: 'Something went wrong'});
+  if (!container) return res.status(404).json({error: 'Container not found'});
 
   const itemsResult = await supabase
     .from('items')
@@ -279,12 +305,13 @@ app.get('/api/items/:id', async (req,res) => {
     .from('items')
     .select('*, containers(id, name)')
     .eq('id',id)
-    .single();
+    .maybeSingle();
 
   const data = result.data;
   const error = result.error;
 
-  if (error) return res.status(404).json({error: 'Item not found'});
+  if (error) return res.status(500).json({error: 'Something went wrong'});
+  if (!data) return res.status(404).json({error: 'Item not found'});
 
   const item = data;
 
@@ -310,7 +337,7 @@ app.post('/api/items', async (req,res) => {
     .from('items')
     .insert([
       {
-        name,
+        name: name.trim(),
         description,
         image_url,
         container_id: container_id || null,
@@ -344,7 +371,7 @@ app.put('/api/items/:id', async (req, res) => {
   const result = await supabase
     .from('items')
     .update({
-      name,
+      name: name.trim(),
       description,
       image_url,
       container_id: container_id || null,
@@ -352,7 +379,7 @@ app.put('/api/items/:id', async (req, res) => {
     })
     .eq('id',id)
     .select()
-    .single();
+    .maybeSingle();
 
   const data = result.data;
   const error = result.error;
@@ -375,7 +402,7 @@ app.patch( '/api/items/:id/favorite', async(req,res) => {
     .update({is_favorited:!!is_favorited})
     .eq('id',id)
     .select()
-    .single();
+    .maybeSingle();
 
   const data = result.data;
   const error = result.error;
@@ -424,8 +451,9 @@ app.use((req, res) => {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) throw new Error('Set SUPABASE_URL and SUPABASE_KEY in the root .env file.');
-  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
+  if (!process.env.SUPABASE_URL || !supabaseKey) throw new Error('Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in the root .env file.');
+  const supabase = createClient(process.env.SUPABASE_URL, supabaseKey);
   const port = Number(process.env.PORT) || 5000;
   createApp(supabase).listen(port, () => console.log(`WheresMyStuff API listening on port ${port}`));
 }
