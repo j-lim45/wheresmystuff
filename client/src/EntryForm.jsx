@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api } from './api';
-import { useInventory } from './Store';
+import { useInventory } from './InventoryContext';
 import Modal from './components/Modal';
 import Photo from './components/Photo';
 import Icon from './components/Icon';

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useInventory } from './Store';
+import { useInventory } from './InventoryContext';
 import Icon from './components/Icon';
 import ContainerCard from './components/ContainerCard';
 import ItemCard from './components/ItemCard';

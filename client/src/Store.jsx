@@ -1,9 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
-import { createContext, useContext } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from './api';
-
-export const InventoryContext = createContext(null);
-export const useInventory = () => useContext(InventoryContext);
+import { InventoryContext } from './InventoryContext';
 
 export function InventoryProvider({ children }) {
   const [containers, setContainers] = useState([]);
@@ -11,6 +8,7 @@ export function InventoryProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const noticeTimer = useRef(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -31,17 +29,19 @@ export function InventoryProvider({ children }) {
     refresh();
   }, [refresh]);
 
-  useEffect(() => {
-    if (!notice) return;
-    const timer = setTimeout(() => setNotice(''), 4000);
-    return () => clearTimeout(timer);
-  }, [notice]);
+  useEffect(() => () => clearTimeout(noticeTimer.current), []);
+
+  const showNotice = useCallback((message) => {
+    setNotice(message);
+    clearTimeout(noticeTimer.current);
+    noticeTimer.current = setTimeout(() => setNotice(''), 4000);
+  }, []);
 
   async function favorite(item) {
     const updated = await api.toggleFavorite(item.id, !item.is_favorited);
     setItems(current => current.map(entry => entry.id === item.id ? { ...entry, ...updated } : entry));
-    setNotice(updated.is_favorited ? 'Added to favorites' : 'Removed from favorites');
+    showNotice(updated.is_favorited ? 'Added to favorites' : 'Removed from favorites');
   }
 
-  return <InventoryContext.Provider value={{containers, items, loading, error, refresh, favorite, notice, setNotice}}>{children}</InventoryContext.Provider>;
+  return <InventoryContext.Provider value={{containers, items, loading, error, refresh, favorite, notice, setNotice: showNotice}}>{children}</InventoryContext.Provider>;
 }

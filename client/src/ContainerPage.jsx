@@ -1,5 +1,5 @@
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { useInventory } from './Store';
+import { useInventory } from './InventoryContext';
 import { Empty } from './HomePage';
 import Photo from './components/Photo';
 import Icon from './components/Icon';

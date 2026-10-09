@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import { InventoryProvider } from './Store';
-import { useInventory } from './Store';
+import { useInventory } from './InventoryContext';
 import HomePage from './HomePage';
 import ContainerPage from './ContainerPage';
 import ItemPage from './ItemPage';
