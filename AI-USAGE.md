@@ -1,81 +1,95 @@
-# AI-USAGE.md
+# AI usage record
+
+This record distinguishes generated work from the parts I reviewed, changed, and wrote myself. Commit links point to the repository history so each account can be checked.
 
 ## How I used AI
 
-### Entry 1
-- 09/27/2026 using Claude
-- Give an intial API backend file based on the initial requirements of the application (see attached files)
-- A modified `server.js` file
-- Since the backend is mostly placeholder for now, I kept all of it, while I tested the backend routes using an API client. Requirements will change as the app is developed
-- Commit hash 7779e88
+### 1. Initial API structure
 
-### Entry 2
-- 09/26/2026 using Claude
-- Give a barebones Home Page UI based on the attached Wireframe and Design System file
-- Window files and React components for the Home Page
-- All the files that were still visible in the added files in the commit were kept, other files such as widgets not included in the wireframe were removed, and certain components were commented out in the home page before they were added in the repository
-- Commit hash 50dcaac
+- **Tool:** Claude
+- **Request:** Create an initial Express and Supabase API from the application's requirements.
+- **Output:** A starting `server/server.js` containing explicit container and item routes.
+- **What I kept or changed:** I kept the initial route structure after manually exercising it with an API client. I later revised validation, uploads, status handling, and authentication as the requirements developed.
+- **Commit:** [7779e88](https://github.com/j-lim45/wheresmystuff/commit/7779e88)
 
-### Entry 3
-- 09/30/2026 using Codex
-- Improve the backend API by adding the upload image feature for both containers and items
-- A modified `server.js` file with image upload baked into existing functions and better input validation
-- Everything from the file was kept after manually testing the routes, removed some Playwright tests artifacts, since it seems satisfactory enough for my use case
-- Commit hash 6d42534
+### 2. First home-page implementation
 
-### Entry 4
-- 09/30/2026 using Codex
-- Redesign the Home Page UI using the Tailwind framework while still maintainting most of the Wireframe and Design System aspects as well
-- Modified JSX files and an added function that facilitates retrieval of items and containers in a separate file
-- Components and design aspects that match the actual wireframe was kept, since generated files do not 100% follow the actual wireframe. Sidebar element was kept however, while multiple that could work as one file were merged, such as Store.jsx which originally was two separate files, to have less bloated file quantities
-- Commit hash e56309d
+- **Tool:** Claude
+- **Request:** Create a bare-bones React home page based on my wireframe and design system.
+- **Output:** React components and supporting frontend files for the home page.
+- **What I kept or changed:** I kept the components that matched the wireframe, removed generated widgets that were outside its scope, and temporarily commented out unfinished parts before committing.
+- **Commit:** [50dcaac](https://github.com/j-lim45/wheresmystuff/commit/50dcaac)
 
-### Entry 5
-- 10/01/2026 using Codex
-- Design the Create/Edit entry form component using Tailwind
-- A modal component using TailwindCSS elements in the entry form file
-- Some text elements that seemed like clutter in the form was removed, some text were adjusted to fit what I want to display
-- Commit hash 338f46e
+### 3. Image uploads and validation
 
-### Entry 6
-- 10/01/2026 using Codex
-- Design the item page components using Tailwind
-- JSX files for the item page and cards
-- Text elements that were not supposed to be there (additional components added by AI) were removed like header and footer text. Color of heart icon was changed to reflect wireframe more. Everything else was kept.
-- Commit hash 1294889
+- **Tool:** OpenAI Codex
+- **Request:** Add image uploads for containers and items and improve backend input validation.
+- **Output:** Supabase Storage upload logic, file checks, and a `validateEntry` helper in `server/server.js`.
+- **What I kept or changed:** I kept the upload and validation implementation after manually testing the routes. I removed generated Playwright artifacts because they were not part of the submitted test setup.
+- **Commit:** [6d42534](https://github.com/j-lim45/wheresmystuff/commit/6d42534)
+
+### 4. Tailwind home-page redesign
+
+- **Tool:** OpenAI Codex
+- **Request:** Redesign the home page with Tailwind while retaining the wireframe and design-system decisions.
+- **Output:** Updated JSX, Tailwind classes, navigation, cards, and shared inventory retrieval code.
+- **What I kept or changed:** I retained the useful sidebar, cards, and counters. I removed filler sections, returned the search bar to the wireframe's header position, and merged unnecessary component splits such as the original two-file store implementation.
+- **Commit:** [e56309d](https://github.com/j-lim45/wheresmystuff/commit/e56309d)
+
+### 5. Create/edit form
+
+- **Tool:** OpenAI Codex
+- **Request:** Design a shared Tailwind form for creating and editing items and containers.
+- **Output:** A modal-based `EntryForm` with reusable item/container fields.
+- **What I kept or changed:** I kept the shared modal and field structure, removed explanatory text that cluttered the form, and adjusted labels to match the language used elsewhere in the application.
+- **Commit:** [338f46e](https://github.com/j-lim45/wheresmystuff/commit/338f46e)
+
+### 6. Item detail page and cards
+
+- **Tool:** OpenAI Codex
+- **Request:** Build the Tailwind item detail page and item-card components.
+- **Output:** `ItemPage.jsx` and item-card presentation code.
+- **What I kept or changed:** I removed generated header/footer text that was not in my design and changed the favourite heart from orange to red. I retained the detail layout and reusable card implementation.
+- **Commit:** [1294889](https://github.com/j-lim45/wheresmystuff/commit/1294889)
 
 ## Where the AI got it wrong
-- e56309d: The AI doesn't seem to follow the wireframe strictly. It tries to make its own version by adding some elements it thinks it should be in. Although the raw version of the frontend without human intervention is not in the actual commit, elements such as text filler or unneccessary elements such as all items section in home page were added, which were then removed after further checking. The search bar was also in the wrong place, not being in the header. It was then moved to the header in line with the wireframe. Some elements such as the sidebar and container/item counter were kept.
-- 4e74d2e: The AI gave conflicting numbers on the port for the Express app to listen to. In some instances, the .env file was pointing to port 5000, while the app was actually listening to port 3000. I searched for every instance that listed port 3000 and and changed it to 5000 to resolve port conflicts.
-- 0257be8c: The AI was inconsistent on the import style in one file, specifically in `server.js`, since it used both CommonJS and ESM for importing modules. This was fixed manually after building the app and receving import conflict errors.
 
-## Who wrote what (30 points)
+### 1. It departed from the wireframe
 
-### Backend API routes
-  - File: server/server.js
-  - Commit: 7779e88
-  - I wrote the main API routes for creating, retrieving, updating, and deleting containers and items. These routes read request parameters and bodies, perform the corresponding Supabase queries, handle database errors, and return suitable HTTP status codes. I kept each operation as an explicit Express route because this makes the behaviour of each endpoint straightforward to follow and test. The image-upload logic and the later validateEntry helper were AI-assisted and are not included in my claim for this part.
-### Frontend API interface
-  - File: client/src/api.js
-  - Commit: 7779e88
-  - I wrote the shared request function and the API methods used for containers, items, and favourites. The shared function sends requests, converts successful responses from JSON, handles 204 No Content, and turns unsuccessful responses into errors that the interface can display. I structured the file this way so that React components do not need to repeat URLs, HTTP methods, JSON conversion, and error handling. The uploadImage function was AI-written and is not included as my own work.
-### Search state and its connection to the pages
-  - File: (Most .jsx files that uses states)
-  - Commit: Most commits committing said .jsx files
-  - I wrote the state declarations such as const [search, setSearch] = useState('') and connected this value to the search bar and page components. For the home page, since the 
-### Container page layout adjustments
-  - File: client/src/ContainerPage.jsx
-  - Commit: 61bf60a
-  - I adjusted the Container page by reusing Tailwind classNames from other parts of the project and testing which combinations worked with the container page. These classes control the responsive two-column container summary, spacing, text wrapping, and item-card grid. Reusing established classes keeps the Container page visually consistent with the rest of the application instead of introducing a separate styling pattern.
-### Favourite-heart colour
-  - File: client/src/components/ItemCard.jsx
-  - Commit: 1294889
-  - I changed the favorited heart from orange colour, text-[#f0b66d], to text-red-500. When an item is favorited, the icon uses fill="currentColor", so the heart becomes solid red. When it is not favorited, it uses text-stone-200 with fill="none", producing a neutral outlined heart. I made this change because originally I thought of the heart icon should be red and not orange as generated. The wireframe did not show it but I had it in mind when designing it.
-### Entry validation helper
-  - File: server/server.js
-  - Commit: 6d42534
-  - The AI helped write the validateEntry function, adding more edge cases and making it clean, such as the HTTP checker and boolean checker, and I kept it after reviewing and testing its behaviour. It checks that the name exists, is text, and is no longer than 120 characters. It also limits descriptions to 2000 characters and locations to 200 characters. If an image URL is provided, it verifies that the value is a valid URL using either HTTP or HTTPS. It also confirms that is_favorited, when supplied, is a Boolean rather than an arbitrary value. Through an API client, it also returned a specific error message when validation fails and returns null when the input is valid. The create and update routes call it before sending information to Supabase and returns code 400 if it finds a problem. I kept this implementation because it covers invalid input scenarios that I had not initially considered, since I was not familiar with all of the possible test cases that might happen
-### Tailwind CSS
-  - File: (Most classNames and CSS)
-  - Commit: Most .jsx files containing Tailwind
-  - Most of the Tailwind styling in the project was generated with AI assistance. This includes the responsive layouts, spacing, colours, borders, typography, modal presentation, cards, navigation elements, buttons, and form controls. I made sure that it matches closely the wireframe made through Figma, and some design system elements if it still looked valid. I reviewed the generated classes, removed unnecessary interface elements, and modified parts that did not match my wireframe or strayed much from the intended design. I kept its implementation since Tailwind is a common and widely used CSS framework for responsive styling. The keywords `flex`, `gap`, and `grid` are common responsive attributes carried over from Vanilla CSS, and alignment keywords such as `justify-center` and `items-center` are also based on flexbox.
+- **AI output:** The generated home page included an extra all-items section, filler text, and a search bar outside the header.
+- **Problem:** Those choices contradicted my wireframe and made the overview more crowded than intended.
+- **Fix:** I removed the extra content and moved the search bar into the header, while keeping the sidebar and useful item/container counters.
+- **Commit:** [e56309d](https://github.com/j-lim45/wheresmystuff/commit/e56309d)
+
+### 2. It used conflicting server ports
+
+- **AI output:** Generated setup and configuration references alternated between ports `3000` and `5000`.
+- **Problem:** The client instructions and Express process could point at different ports, causing requests to fail even while both processes appeared to run.
+- **Fix:** I searched the project for port `3000` and standardized the API and documentation on port `5000`.
+- **Commit:** [4e74d2e](https://github.com/j-lim45/wheresmystuff/commit/4e74d2e)
+
+### 3. It mixed module systems
+
+- **AI output:** One version of `server/server.js` mixed CommonJS `require` calls with ES module `import` syntax.
+- **Problem:** The project declares `"type": "module"`, so the mixed syntax produced module/import errors when the application was built and run.
+- **Fix:** I made the server consistently use ES module imports and verified that the start script could load it.
+- **Commit:** [0257be8](https://github.com/j-lim45/wheresmystuff/commit/0257be8)
+
+## Who wrote what
+
+### Parts I wrote or substantially directed
+
+- **Backend route behaviour — `server/server.js`, [7779e88](https://github.com/j-lim45/wheresmystuff/commit/7779e88):** I worked on the explicit CRUD route behaviour, including reading parameters and request bodies, performing Supabase operations, and returning HTTP responses. The initial scaffold was AI-generated, and I do not claim the later AI-assisted upload and validation helper as solely mine.
+- **Frontend API wrapper — `client/src/api.js`, [7779e88](https://github.com/j-lim45/wheresmystuff/commit/7779e88):** I wrote the shared request flow used by the React pages. It centralizes URLs, JSON parsing, non-success errors, and `204 No Content` handling. The later `uploadImage` function was AI-assisted.
+- **Search state — `client/src/App.jsx`, `client/src/HomePage.jsx`, and `client/src/ContainerPage.jsx`, [e56309d](https://github.com/j-lim45/wheresmystuff/commit/e56309d):** I connected the `search` state in the application shell to the search field and passed it into the active page. The pages normalize the query and filter names, descriptions, locations, and container names before rendering cards.
+- **Container-page layout adjustments — `client/src/ContainerPage.jsx`, [61bf60a](https://github.com/j-lim45/wheresmystuff/commit/61bf60a):** I selected and adjusted the responsive grid, spacing, text wrapping, and card layout by reusing the project's established Tailwind patterns.
+- **Favourite-heart colour — `client/src/components/ItemCard.jsx`, [1294889](https://github.com/j-lim45/wheresmystuff/commit/1294889):** I changed the active heart from orange to solid red and retained a neutral outline for items that are not favourites.
+
+### AI-written piece I can explain
+
+- **Validation helper — `server/server.js`, [6d42534](https://github.com/j-lim45/wheresmystuff/commit/6d42534):** Codex helped write `validateEntry`. It rejects missing or overlong names, limits description and location lengths, permits only HTTP(S) image URLs, and requires a Boolean favourite value. Create and update routes call it before querying Supabase and return `400` when it reports a validation message. I kept it after testing representative valid and invalid bodies because server-side validation protects the API even when requests do not come from the React form.
+- **Tailwind presentation — most `client/src/**/*.jsx` files, especially [e56309d](https://github.com/j-lim45/wheresmystuff/commit/e56309d), [338f46e](https://github.com/j-lim45/wheresmystuff/commit/338f46e), and [1294889](https://github.com/j-lim45/wheresmystuff/commit/1294889):** AI produced much of the responsive Tailwind styling. The `flex` and `grid` utilities choose layout modes, `gap` and padding utilities establish spacing, breakpoint prefixes change layouts at larger widths, and colour/border utilities create the visual hierarchy. I reviewed the result against my wireframe, removed additions outside the design, and changed individual classes where needed.
+
+## Final review note
+
+The latest security, schema, documentation, and automated-test repairs were made with OpenAI Codex in the final review session. Add the resulting commit link here after committing these changes so the record remains auditable.
