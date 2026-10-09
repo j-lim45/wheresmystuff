@@ -2,94 +2,78 @@
 
 [![Made with AI](https://img.shields.io/badge/Made_with-AI_assistance-blue)](AI-USAGE.md)
 
-## 1. Overview
+WheresMyStuff is a full-stack inventory tracker for recording which storage container holds an item. It supports container and item CRUD operations, search, favourites, image uploads, responsive pages, and an application-wide password gate.
 
-WheresMyStuff is a tracker app that lets users keep track of where they put their things inside different storage containers. It is designed for organized people who store many items across different containers and want an easy way to find them.
+Built with assistance from Claude and OpenAI Codex. The requests, edits, mistakes, and authorship breakdown are documented in [AI-USAGE.md](AI-USAGE.md). Security controls and evidence are documented in [SECURITY-CHECKLIST.md](SECURITY-CHECKLIST.md).
 
-## 2. Setup and Installation
+## Technology
 
-### Prerequisites
+- React, React Router, Vite, and Tailwind CSS
+- Node.js and Express
+- Supabase PostgreSQL and Storage
+- HTTP Basic Authentication over HTTPS
 
-Install the following before running the project:
+## Setup
 
-- Node.js
-- npm
+Requirements: Node.js 20 or newer, npm, and a Supabase project.
 
-Check external resources on how to install the dependencies.    
+1. Clone the repository and run `npm install`.
+2. In the Supabase SQL editor, run [`supabase/schema.sql`](supabase/schema.sql). This creates the tables, constraints, indexes, RLS configuration, and image bucket.
+3. Copy `.env.example` to `.env` and replace every placeholder:
 
-1. Download the repository or clone it using Git
-2. Open the project folder in a terminal
-3. Run `npm install`
-4. Create an `.env` file in the project folder and add these lines
-
-```bash
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_anon_key
-BASIC_AUTH_USERNAME=your_chosen_username
-BASIC_AUTH_PASSWORD=your_chosen_password
+```dotenv
+SUPABASE_URL="your Supabase project URL"
+SUPABASE_SERVICE_ROLE_KEY="your server-only service-role key"
+BASIC_AUTH_USERNAME="your chosen username"
+BASIC_AUTH_PASSWORD="a strong unique password"
+CLIENT_ORIGIN="http://localhost:5173"
+PORT="5000"
 ```
 
-5. Run the API with `npm run api`
-6. Create/Split a new terminal then run the app with `npm run dev`
-7. Open the app in the browser using the link `http://localhost:5173/`
+The service-role key must only be used by the Express server. Never put it in a `VITE_` variable, browser code, Git, or a public hosting setting.
 
-Build with `npm run build` and start with `npm start`. Express serves both the
-frontend and API on `PORT` (default `5000`), behind HTTP Basic Authentication.
-Deploy this Node app on an HTTPS host; do not deploy the frontend separately as
-a public static site. Leave `VITE_API_URL` unset so requests use the same origin.
+4. Start the API with `npm run api`.
+5. In another terminal, start the client with `npm run dev`.
+6. Open `http://localhost:5173` and enter the Basic Auth credentials.
 
-Set `SUPABASE_URL`, `SUPABASE_KEY`, `BASIC_AUTH_USERNAME`, and
-`BASIC_AUTH_PASSWORD` in your hosting provider's environment settings. Missing
-login credentials prevent the server from starting. Usernames cannot contain
-a colon. The browser asks for credentials when you open the hosted app.
-See [MDN's HTTP authentication guide](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication).
+For a production-style local run, use `npm run build` followed by `npm start`, then open `http://localhost:5000`. Deploy the combined Node app on an HTTPS host; do not deploy `client/dist` alone because that would bypass the access gate.
 
-Keep the actual login credentials in your private workspace `project/README.md`
-and share that file privately with the grader. The `project/` directory and local
-`.env` files are ignored by Git. Never add real credentials to this README or
-force-add ignored files. Vite's development server is for local use only; use
-the Express server for the protected deployment.
+## Verification
 
-## 3. Features and Usage
+Run all static checks, API tests, and the production build:
 
-### Home Page
+```bash
+npm run check
+```
 
-The Home Page displays all containers and favorited items.
+`GET /api/health` is protected by the same access gate as every other route and returns `200` only when the database query succeeds. It returns `503` when the database is unavailable.
 
-- Use the search bar to find things.
-- View containers through container cards.
-- Select **Add Container** to create a container.
-- View favorited items through item cards.
+## API
 
-### Container Page
+| Method | Route | Purpose | Success |
+| --- | --- | --- | --- |
+| GET | `/api/health` | Check API and database | `200` |
+| GET/POST | `/api/containers` | List or create containers | `200`/`201` |
+| GET/PUT/DELETE | `/api/containers/:id` | Read, replace, or delete a container | `200`/`204` |
+| GET/POST | `/api/items` | List or create items | `200`/`201` |
+| GET/PUT/DELETE | `/api/items/:id` | Read, replace, or delete an item | `200`/`204` |
+| PATCH | `/api/items/:id/favorite` | Change favourite state | `200` |
+| POST | `/api/uploads?kind=item` | Upload a validated image up to 5 MB | `201` |
 
-The Container Page shows all items stored inside a selected container.
+Invalid input returns `400`, missing records return `404`, a non-empty container returns `409` when deletion is attempted, and unexpected database failures return a generic `500` response.
 
-- View container information.
-- View the items inside the container.
-- Select **Add Item** to add an item.
-- Select an item to view or edit it.
+## Usage
 
-### Create Item
+- The overview displays containers and favourite items.
+- Search filters the currently displayed inventory.
+- Open a container to inspect its contents.
+- Use **Add Container** or **Add Item** to create records and optionally upload an image.
+- Open an item to edit, favourite, move, or delete it.
 
-Allows the user to create a new item by entering information such as its name, description, and container/location.
+## Security and deployment
 
-### Create Container
-
-Allows the user to create a new storage container by entering its name, description, and location.
-
-### Edit Item
-
-Allows the user to update information about an existing item and save the changes.
-
-## 4. Screenshots
-
-### Home Page
-
-
-
-### Container Page
-
-
-
-### Create/Edit Forms
+- Keep production credentials only in the hosting provider's encrypted environment settings.
+- Put the grader's private credentials in the private workspace `project/README.md`; never commit them here.
+- Set `CLIENT_ORIGIN` to the exact production origin and use HTTPS.
+- RLS is enabled with no public table policies. The trusted server performs database work with its server-only service-role key after Basic Auth succeeds.
+- Rotate any credential immediately if it is ever committed or shared publicly.
